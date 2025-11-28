@@ -1,0 +1,15 @@
+The Personal Environment (TPE)
+---
+
+Functionalities:
+    
+    Initial: a webpage to keep my daily logs. 
+    (area for text editing and submitting the log)
+###
+
+System descriptions(v0.1):
+    * frontend: a place to edit text(type logs)
+    * frontend: a place to view stored logs
+    * a button to submit the logs after writing
+    * API for database communication
+    
