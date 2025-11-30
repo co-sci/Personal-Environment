@@ -50,17 +50,8 @@
     <!-- LEFT PANEL (Logs list) -->
     <div class="col-span-1 bg-slate-800/60 border border-blue-500/50 rounded-xl p-4 overflow-y-auto holo-glow">
       <h2 class="text-xl font-bold mb-4 text-blue-300">Logs</h2>
-      <ul class="space-y-2">
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 1</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 2</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 3</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 4</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 5</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 6</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 7</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 8</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 9</a></li>
-        <li><a href="#" class="block p-2 rounded hover:bg-blue-500/20">Log Entry 10</a></li>
+      <ul class="space-y-2" id="logs-list">
+
       </ul>
     </div>
 
@@ -85,6 +76,29 @@
     </div>
 
   </div>
+
+  <script>
+    // Not working!!!!!!!!
+    async function loadlogs() {
+      try {
+        const response = await fech("/logs", {
+          headers: { "Accept": "application/json" }
+        });
+
+        const logs = await response.json();
+        const list = document.getElementById("logs-list");
+        list.innerHTML = "";
+
+        logs.forEach(log => {
+          const li = document.createElement("li");
+          li.textContent = `${log.author}: ${log.log}`;
+          list.appendChild(li);
+        });
+      } catch(err) {
+          console.log("Error loading logs", err);
+      }
+    }
+  </script>
 </body>
 </html>
 

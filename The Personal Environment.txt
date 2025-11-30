@@ -12,4 +12,3 @@ System descriptions(v0.1):
     * frontend: a place to view stored logs
     * a button to submit the logs after writing
     * API for database communication
-    
