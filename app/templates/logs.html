@@ -5,15 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Mass Effect–style font (Eurostile-like) -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: 'Orbitron', sans-serif;
-    } 
-
-    /* Scan flicker effect */
+    body { font-family: 'Orbitron', sans-serif; } 
     .scanlines::after {
       content: "";
       position: absolute;
@@ -47,41 +42,73 @@
   <!-- MAIN LAYOUT -->
   <div class="relative scanlines w-full max-w-6xl h-[80vh] grid grid-cols-1 md:grid-cols-3 gap-4">
 
-    <!-- LEFT PANEL (Logs list) -->
-    <div class="col-span-1 bg-slate-800/60 border border-blue-500/50 rounded-xl p-4 overflow-y-auto holo-glow">
+    <!-- LEFT PANEL -->
+    <div class="col-span-1 bg-slate-800/60 border border-blue-500/50 rounded-xl p-4 overflow-y-auto">
       <h2 class="text-xl font-bold mb-4 text-blue-300">Logs</h2>
-      <ul class="space-y-2" id="logs-list">
-
-      </ul>
+      <ul class="space-y-2" id="logs-list"></ul>
     </div>
 
-    <!-- RIGHT PANEL (Main content) -->
-    <div class="col-span-1 md:col-span-2 bg-slate-800/60 border border-blue-500/50 rounded-xl p-4 overflow-y-auto holo-glow">
-      <h2 class="text-xl font-bold mb-4 text-blue-300">Log Viewer</h2>
+    <!-- RIGHT PANEL -->
+    <div class="col-span-1 md:col-span-2 bg-slate-800/60 border border-blue-500/50 rounded-xl p-4 overflow-y-auto">
 
-      <div class="space-y-4">
-        <div class="bg-slate-700/40 p-3 rounded-lg border border-blue-500/30">
-          <img src="https://via.placeholder.com/600x200" class="rounded mb-3" />
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae volutpat urna. Curabitur feugiat, lacus sed placerat pellentesque, est libero luctus lorem, ut tempor sapien ipsum a justo. Integer semper, massa quis hendrerit bibendum, metus justo fermentum quam, sed faucibus urna leo ut tortor.
-          </p>
-        </div>
+      <!-- VIEWER -->
+      <div id="viewer-panel" class="hidden">
+        <h2 class="text-xl font-bold mb-4 text-blue-300">log viewer</h2>
 
-        <div class="bg-slate-700/40 p-3 rounded-lg border border-blue-500/30">
-          <p>
-            Another long log text could go here. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.
-          </p>
+        <div class="space-y-4">
+          <p id="viewer-text" class="bg-slate-700/40 p-3 rounded-lg border border-blue-500/30"></p>
+
+          <div class="text-sm text-blue-300 opacity-75">
+            <p><strong>author:</strong> <span id="viewer-author"></span></p>
+            <p><strong>date:</strong> <span id="viewer-date"></span></p>
+          </div>
+
+          <button
+            onclick="goBackToForm()"
+            class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            ← Back
+          </button>
         </div>
       </div>
-    </div>
 
+      <!-- FORM -->
+      <div id="form-panel">
+        <h2 class="text-xl font-bold mb-4 text-blue-300">new log</h2>
+
+        <form class="space-y-3" onsubmit="submitLog(event)">
+          <input 
+            id="newlog-image" 
+            type="text"
+            placeholder="image url"
+            class="w-full p-2 bg-slate-700 border border-blue-500/40 rounded"
+          />
+
+          <textarea 
+            id="newlog-text" 
+            placeholder="write your log..."
+            class="w-full p-2 bg-slate-700 border border-blue-500/40 rounded h-32"
+          ></textarea>
+
+          <button 
+            class="w-full bg-blue-600 hover:bg-blue-500 text-white p-2 rounded"
+            type="submit"
+          >
+            Save Log
+          </button>
+        </form>
+      </div>
+
+    </div>
   </div>
 
   <script>
-    // Not working!!!!!!!!
-    async function loadlogs() {
+    document.addEventListener("DOMContentLoaded", () => loadLogs());
+
+    // Load all logs (left list)
+    async function loadLogs() {
       try {
-        const response = await fech("/logs", {
+        const response = await fetch("/logs", {
           headers: { "Accept": "application/json" }
         });
 
@@ -91,14 +118,64 @@
 
         logs.forEach(log => {
           const li = document.createElement("li");
-          li.textContent = `${log.author}: ${log.log}`;
+          li.className = "p-2 bg-slate-700/40 border border-blue-500/40 rounded cursor-pointer hover:bg-slate-600";
+          li.textContent = log.created_at.split("T")[0];
+          li.onclick = () => loadLog(log.id);
           list.appendChild(li);
         });
-      } catch(err) {
-          console.log("Error loading logs", err);
+
+      } catch (err) {
+        console.log("Error loading logs", err);
+      }
+    }
+
+    // Load single log into viewer
+    async function loadLog(id) {
+      const response = await fetch(`/logs/${id}`);
+      const log = await response.json();
+
+      document.getElementById("form-panel").classList.add("hidden");
+      document.getElementById("viewer-panel").classList.remove("hidden");
+
+      document.getElementById("viewer-text").textContent = log.log;
+      document.getElementById("viewer-author").textContent = log.author;
+      document.getElementById("viewer-date").textContent = log.created_at;
+    }
+
+    // Return to form
+    function goBackToForm() {
+      document.getElementById("viewer-panel").classList.add("hidden");
+      document.getElementById("form-panel").classList.remove("hidden");
+    }
+
+    // Submit new log
+    async function submitLog(event) {
+      event.preventDefault();
+
+      const text = document.getElementById("newlog-text").value;
+      const image = document.getElementById("newlog-image").value;
+
+      const payload = {
+        author: "Davi Coelho",
+        log: text,
+        image: image
+      };
+
+      const response = await fetch("/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert("Log saved!");
+        document.getElementById("newlog-text").value = "";
+        document.getElementById("newlog-image").value = "";
+        loadLogs();
       }
     }
   </script>
+
 </body>
 </html>
 
